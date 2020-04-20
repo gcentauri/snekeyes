@@ -84,3 +84,21 @@
          (total (+ (car die-1) (car die-2)))
          (result (if (= 7 total) "Lucky 7! You win!" "Better luck next time...")))
     (format nil "You rolled ~a ~a. ~a" (cdr die-1) (cdr die-2) result)))
+
+(defun start-snekeyes ()
+  "A start function to pass in as the :toplevel to SAVE-LISP-AND-DIE"
+  (let* ((config (if (uiop:file-exists-p "snekeyes.config")
+                     (with-open-file (input "snekeyes.config")
+                       (read input))
+                     (progn (format  t "I think you need a snekeyes.config~%~%")
+                            (return-from start-snekeyes))))
+         (bot (make-instance 'snekeyes
+                             :ssl (if (member :ssl config)
+                                      (getf config :ssl)
+                                      t)
+                             :hardcopy (getf config :hardcopy)
+                             :user-id (getf config :user-id)
+                             :homeserver (getf config :homeserver))))
+    (when (not (logged-in-p bot))
+      (login bot (getf config :user-id) (getf config :password)))
+    (start bot)))
