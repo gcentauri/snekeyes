@@ -22,7 +22,7 @@
 ;; of the +snekeyes-commands+
 (defmethod handle-event :after ((*snekeyes* snekeyes) (event text-message-event))
   (let* ((words (ppcre:split " " (msg-body event)))
-         (command (car words))
+         (command (string-downcase (car words)))
          (dice-string (cadr words)))
     (if (dice-command-p command)
         (send-text-message *snekeyes* *room-id* (handle-dice-command command dice-string)))))
