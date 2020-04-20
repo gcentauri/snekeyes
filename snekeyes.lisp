@@ -33,15 +33,22 @@
 
 (defun handle-dice-command (command dice-string)
   "Returns a string result of rolling dice according to COMMAND and DICE-STRING."
-  (cond ((equal "roll!" command) (format-dice-rolls (roll-dice dice-string)))
+  (cond ((equal "roll!" command) (roll! dice-string))
         ((equal "craps!" command) (craps))
         (t "This should not be!!!!")))
 
-(defun roll-dice (dice-string)
-  (let ((parsed (parse-dice-string dice-string)))
-    (if parsed
-        (loop for i upto (- (car parsed) 1)
-              collect (roll (cdr parsed))))))
+(defun roll! (dice-string)
+  (let* ((parsed (parse-dice-string dice-string))
+         (num (or (car parsed) 1))
+         (sides (cdr parsed)))
+    (format-dice-rolls
+     (if sides (roll-dice num sides)
+         (roll-dice num)))))
+
+(defun roll-dice (num &optional (sides 6))
+  "Rolls the NUM dice with SIDES faces."
+  (loop for i upto (- num 1)
+        collect (roll sides)))
 
 (defun format-dice-rolls (rolls)
   (let ((total (total-dice-rolls rolls)))
@@ -57,10 +64,10 @@
 (defun parse-dice-string (str)
   "Parses strings like 3d6 and returns a cell with (NUMBER . SIDES)"
   (multiple-value-bind (res matches) (ppcre:scan-to-strings +dice-regex+ str)
-    (if res (cons (read-from-string (elt matches 0)) (read-from-string (elt matches 1))))))
+    (when res (cons (read-from-string (elt matches 0)) (read-from-string (elt matches 1))))))
 
 (defun roll (sides)
-  "Dice rolling function. Returns an integer from 1 to SIDES. 
+  "Dice rolling function. Returns an integer from 1 to SIDES.
    If it is a six sided die, returns the result of calling d6"
   (if (= sides 6) (d6)
       (+ 1 (random sides))))
